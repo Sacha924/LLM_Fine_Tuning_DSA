@@ -87,12 +87,91 @@ The main cost is in training.
 ## Davinci-002 or GPT-3.5-turbo
 
 > Davinci-002 tends to be better at understanding and generating responses for complex tasks. It has been trained on a wider variety of data and for longer, allowing it to develop a deeper understanding of nuanced prompts.
+
 > GPT-3.5-turbo is designed for more rapid responses and may not perform as well on highly complex tasks.
 
 Code-Related Tasks:
 
 > For generating code and solving programming-related queries, Davinci-002 is typically superior. It's been shown to have a better grasp of syntax and logic required for programming, which would be beneficial for solving hard LeetCode problems.
+
 > While GPT-3.5-turbo can handle code to some extent, it might not be as precise or efficient as Davinci-002 when dealing with more complex or less common problems.
 
 
-I will go for Davinci-002
+I will go for Davinci-002.
+
+We can see on the OpenAPI doc : "You can also fine-tune a fine-tuned model which is useful if you acquire additional data and don't want to repeat the previous training steps."
+I'm gonna fine-tune my model two time, firstly on a small dataset, to see if my expectation of the cost is correct.
+
+
+## Advice to get better result 
+
+> I should test my prompt maybe directly on chatGPT, and see which one is the best for solving DSA question.I will when use the prompt for both asking questions and fine tuning the model.
+
+
+## Let's code
+
+For  davinci-002, you can follow the prompt completion pair format used for legacy fine-tuning as shown below :
+
+```json
+{"prompt": "<prompt text>", "completion": "<ideal generated text>"}
+{"prompt": "<prompt text>", "completion": "<ideal generated text>"}
+{"prompt": "<prompt text>", "completion": "<ideal generated text>"}
+```
+
+
+First Step for us :
+setup our data.
+
+the prompt needs to contains the exercise and an instruction, like "Write a Python function with good time complexity that solves this problem."
+
+
+the completion needs to contain the code with format answer ! Using space and \n to respect the indentation. Unfortunately the datasets that can be found on huggingface doesn't contain the formatting that i want https://huggingface.co/datasets?search=leetcode
+
+C'est parti pour récupérer les données. Comme je me suis dit que le modèle savait déjà résoudre casiment tous les easy mais moins les medium et surtout les hard, je vais sélectionner des exos récents dans la catégorie medium et hard.
+
+Etape à suivre selon moi :
+1. Créer un autre compte leetcode (en espérant ne pas me faire ban IP et perdre ma streak leetcode 🙏)
+2. émuler avec Puppeteer le site leetcode, allé sur le bon exercice (liste d'id d'exercices que j'aurai prédéfini à la main)
+3. Allez dans l'onglet solution, cliqué sur python, et prendre la première solution
+4. Allez dans l'endroit du code et le récupérer
+
+Allons tester tout ça.
+
+
+UPDATE : enfait j'ai trouvé en cherchant sur des forums et post stackoverflow, un lien github d'une personne qui répertorie les schéma graphQL de leetcode ! Pas évident pour le souligner, car Leetcode disabled its introspection feature which will let everybody know all the schem (because It's not safe for a company to expose its graphql schema in production)
+
+j'ai testé plusieurs requêtes notamment :
+curl 'https://leetcode.com/graphql'   -H 'Content-Type: application/json' --header 'Referer: https://leetcode.com' --header 'Cookie: LEETCODE_SESSION=your_leetcode_session; csrftoken=your_csrf_token' \  --data-raw '{"query":"query communitySolutions($questionSlug: String!, $skip: Int!, $first: Int!, $query: String, $orderBy: TopicSortingOption, $languageTags: [String!], $topicTags: [String!]) { questionSolutions( filters: {questionSlug: $questionSlug, skip: $skip, first: $first, query: $query, orderBy: $orderBy, languageTags: $languageTags, topicTags: $topicTags} ) { hasDirectResults totalNum solutions { id title commentCount topLevelCommentCount viewCount pinned isFavorite solutionTags { name slug } post { id status voteCount creationDate isHidden author { username isActive nameColor activeBadge { displayName icon } profile { userAvatar reputation } } searchMeta { content contentType commentAuthor { username } replyAuthor { username } highlights } } } }","variables":{"questionSlug":"two-sum","skip":0,"first":1,"orderBy":"hot","languageTags":["python3"],"topicTags":[]}}'
+
+où vous devez remplacé your_leetcode_session et your_csrf_token par les valeurs que vous trouvez dans les cookies lorsque vous lancez une session leetcode. Malheuresement je n'arrive pas à obtenir un bon résultat, je suis bloqué avec :
+
+``` html
+<div id="summary">
+  <h1>Forbidden <span>(403)</span></h1>
+  <p>CSRF verification failed. Request aborted.</p>
+```
+
+Then to upload the data :
+https://platform.openai.com/docs/api-reference/files/create
+
+curl https://api.openai.com/v1/files \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -F purpose="fine-tune" \
+  -F file="@mydata.jsonl"
+
+Then start the finetune :
+https://platform.openai.com/docs/api-reference/fine-tuning
+
+
+curl https://api.openai.com/v1/fine_tuning/jobs \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -d '{
+    "training_file": "MY FILE ID FROM PREVIOUS REQUEST",
+    "model": "davinci-002"
+  }'
+
+
+
+tool to automatically test the solutions 
+https://github.com/skygragon/leetcode-cli?tab=readme-ov-file
