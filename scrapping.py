@@ -154,18 +154,23 @@ if __name__ == "__main__":
     else:
         csrf_token = sys.argv[1]
         leetcode_session = sys.argv[2]
-        title_slug = sys.argv[3]
+        title_slugs = sys.argv[3].split(",")
 
-        content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
-
-        print(content)
-        
-        solution_id = fetch_python_solution_id(csrf_token, leetcode_session, title_slug)
-        print(f"Python solution ID: {solution_id}")
-        
-        solution_content = fetch_solution_content(csrf_token, leetcode_session, solution_id)
-        python_code = extract_python_code(solution_content)
-        print(python_code)
+        with open("data.jsonl", 'w') as file:
+            for title_slug in title_slugs:
+                question_content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
+                
+                solution_id = fetch_python_solution_id(csrf_token, leetcode_session, title_slug)
+                
+                solution_content = fetch_solution_content(csrf_token, leetcode_session, solution_id)
+                python_code = extract_python_code(solution_content)
+                
+                fine_tune_data = {
+                    "prompt": question_content,
+                    "completion": python_code
+                }
+                
+                file.write(json.dumps(fine_tune_data) + '\n')
 
 # Usage :
 # python3 scrapping.py your_csrf_token your_leetcode_session_token title_slug_of_the_problem
