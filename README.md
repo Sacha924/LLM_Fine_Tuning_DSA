@@ -127,33 +127,33 @@ the prompt needs to contains the exercise and an instruction, like "Write a Pyth
 
 the completion needs to contain the code with format answer ! Using space and \n to respect the indentation. Unfortunately the datasets that can be found on huggingface doesn't contain the formatting that i want https://huggingface.co/datasets?search=leetcode
 
-C'est parti pour récupérer les données. Comme je me suis dit que le modèle savait déjà résoudre casiment tous les easy mais moins les medium et surtout les hard, je vais sélectionner des exos récents dans la catégorie medium et hard.
+Let's get the data. As I've decided that the model can already solve almost any easy but less medium and especially hard, I'm going to select recent exos in the medium and hard category.
 
-Etape à suivre selon moi :
-1. Créer un autre compte leetcode (en espérant ne pas me faire ban IP et perdre ma streak leetcode 🙏)
-2. émuler avec Puppeteer le site leetcode, allé sur le bon exercice (liste d'id d'exercices que j'aurai prédéfini à la main)
-3. Allez dans l'onglet solution, cliqué sur python, et prendre la première solution
-4. Allez dans l'endroit du code et le récupérer
+Steps to follow in my opinion:
+1. Create another leetcode account (hoping I won't get an IP ban and lose my leetcode streak 🙏)
+2. emulate the leetcode site with Puppeteer, go to the right exercise (list of exercise ids I've predefined by hand)
+3. Go to the solution tab, click on python, and take the first solution
+4. Go to the code location and retrieve it
 
-Allons tester tout ça.
+Let's test it out.
 
+UPDATE: actually I found a github link from someone who lists leetcode's graphQL schema while searching on forums and stackoverflow post! Not easy to point out, because Leetcode disabled its introspection feature which will let everybody know all the schem (because It's not safe for a company to expose its graphql schema in production)
 
-UPDATE : enfait j'ai trouvé en cherchant sur des forums et post stackoverflow, un lien github d'une personne qui répertorie les schéma graphQL de leetcode ! Pas évident pour le souligner, car Leetcode disabled its introspection feature which will let everybody know all the schem (because It's not safe for a company to expose its graphql schema in production)
+I tested several queries, including :
 
-j'ai testé plusieurs requêtes notamment :
 curl 'https://leetcode.com/graphql'   -H 'Content-Type: application/json' --header 'Referer: https://leetcode.com' --header 'Cookie: LEETCODE_SESSION=your_leetcode_session; csrftoken=your_csrf_token' \  --data-raw '{"query":"query communitySolutions($questionSlug: String!, $skip: Int!, $first: Int!, $query: String, $orderBy: TopicSortingOption, $languageTags: [String!], $topicTags: [String!]) { questionSolutions( filters: {questionSlug: $questionSlug, skip: $skip, first: $first, query: $query, orderBy: $orderBy, languageTags: $languageTags, topicTags: $topicTags} ) { hasDirectResults totalNum solutions { id title commentCount topLevelCommentCount viewCount pinned isFavorite solutionTags { name slug } post { id status voteCount creationDate isHidden author { username isActive nameColor activeBadge { displayName icon } profile { userAvatar reputation } } searchMeta { content contentType commentAuthor { username } replyAuthor { username } highlights } } } }","variables":{"questionSlug":"two-sum","skip":0,"first":1,"orderBy":"hot","languageTags":["python3"],"topicTags":[]}}'
 
-où vous devez remplacé your_leetcode_session et your_csrf_token par les valeurs que vous trouvez dans les cookies lorsque vous lancez une session leetcode. Malheuresement je n'arrive pas à obtenir un bon résultat, je suis bloqué avec :
+where you have to replace your_leetcode_session and your_csrf_token by the values you find in the cookies when you launch a leetcode session. Unfortunately I can't get a good result, I'm stuck with :
 
 ``` html
 <div id="summary">
   <h1>Forbidden <span>(403)</span></h1>
   <p>CSRF verification failed. Request aborted.</p>
 ```
+before attempting to scrape, I'm going to try to analyze the queries made internally on the leetcode side myself
 
-avant de tenter de scrapper, je vais tenter de moi même analysé les requêtes effectuées en interne du côté de leetcode
+I go to the first exo "Two Sum" and I see that a request has in response :
 
-Je vais sur le premier exo "Two Sum" et je vois qu'une requête a en réponse : 
 ```json
 {
     "data": {
@@ -166,14 +166,20 @@ Je vais sur le premier exo "Two Sum" et je vois qu'une requête a en réponse :
 }
 ```
 
-C'est exactement ce que je veux !
-J'ai donc analysé la requête et ces en-têtes, et ai pu créé une requête fonctionnelle, check scrapping.py
+That's exactly what I want!
+So I analyzed the query and these headers, and was able to create a working query (check scrapping.py).
 
-Maintenant je veux également une réponse par exercice !
+Now I also want a response per exercise!
 
+Looking at the various queries, I found that :
+1. When you click on solutions, a query retrieves the various solutions with their ids and tags.
+2. When you click on a specific solution, another query is made using the id of the solution and retrieves its content, as shown in the following image:
 
+  <img src="img/5.JPG"/>
 
+I can therefore retrieve a list of exercises from solutions and filter them by taking the first solution (the list of solutions contains tags and I can therefore take the first solution with the python3 tag).
 
+Now that I've got the exercise content and its solution, I just need to do a little formatting to get our jsonl file for the training data.
 
 
 
