@@ -1,6 +1,9 @@
-import requests
 import re
 from html import unescape
+
+import requests
+import sys
+
 
 def fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug):
     """
@@ -36,9 +39,30 @@ def fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug):
     else:
         return "Failed to fetch the content. Status code: " + str(response.status_code)
 
-csrf_token = "your_csrftoken_here"
-leetcode_session = "your_leetcode_session_token_here"
-title_slug = "two-sum"
+def clean_leetcode_content(content):
+    """
+    Clean the LeetCode content by removing extra spaces and the follow-up section.
 
-content = fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug)
-print(content)
+    :param content: Raw content from LeetCode
+    :return: Cleaned content
+    """
+    content = content.split("Follow-up:")[0]     # sometimes there is a "Follow-up" section in leetcode statement, i don't want it
+    content = ' '.join(content.split())          # I get multiple spaces, so let's clean that
+
+    return content
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        print("Usage: python script.py <csrf_token> <leetcode_session> <title_slug>")
+    else:
+        csrf_token = sys.argv[1]
+        leetcode_session = sys.argv[2]
+        title_slug = sys.argv[3]
+
+        content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
+
+        print(content)
+
+# Usage :
+# python3 scrapping.py your_csrf_token your_leetcode_session_token title_slug_of_the_problem
