@@ -1,8 +1,9 @@
+import json
 import re
+import sys
 from html import unescape
 
 import requests
-import sys
 
 
 def fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug):
@@ -52,6 +53,101 @@ def clean_leetcode_content(content):
     return content
 
 
+
+def fetch_python_solution_id(csrf_token, leetcode_session, title_slug):
+    """
+    Fetch the ID of the first Python solution for a given LeetCode problem.
+    """
+    url = 'https://leetcode.com/graphql'
+    headers = {
+        'Content-Type': 'application/json',
+        'Referer': f'https://leetcode.com/problems/{title_slug}/',
+        'Cookie': f'csrftoken={csrf_token}; LEETCODE_SESSION={leetcode_session}',
+        'X-Csrftoken': csrf_token
+    }
+    query = {
+        "query": """
+        query questionSolutions($questionSlug: String!, $skip: Int!, $first: Int!, $orderBy: TopicSortingOption, $languageTags: [String!]) {
+            questionSolutions(
+                filters: {
+                    questionSlug: $questionSlug,
+                    skip: $skip,
+                    first: $first,
+                    orderBy: $orderBy,
+                    languageTags: $languageTags
+                }
+            ) {
+                solutions {
+                    id
+                    solutionTags {
+                        slug
+                    }
+                }
+            }
+        }
+        """,
+        "variables": {
+            "questionSlug": title_slug,
+            "skip": 0,
+            "first": 20,
+            "orderBy": "most_votes",
+            "languageTags": ["python3"]
+        }
+    }
+    
+    response = requests.post(url, json=query, headers=headers)
+    if response.status_code == 200:
+        solutions = response.json()['data']['questionSolutions']['solutions']
+        for solution in solutions:
+            if 'python3' in [tag['slug'] for tag in solution['solutionTags']]:
+                return solution['id']
+    return None
+
+
+def fetch_solution_content(csrf_token, leetcode_session, solution_id):
+    """
+    Fetch the content of a solution by its ID.
+    """
+    url = 'https://leetcode.com/graphql'
+    headers = {
+        'Content-Type': 'application/json',
+        'Referer': f'https://leetcode.com/problems/two-sum/solutions/{solution_id}/',
+        'Cookie': f'csrftoken={csrf_token}; LEETCODE_SESSION={leetcode_session}',
+        'X-Csrftoken': csrf_token
+    }
+    query = {
+        "query": """
+        query topic($topicId: Int!) {
+            topic(id: $topicId) {
+                post {
+                    content
+                }
+            }
+        }
+        """,
+        "variables": {
+            "topicId": solution_id
+        }
+    }
+    
+    response = requests.post(url, json=query, headers=headers)
+    if response.status_code == 200:
+        content = response.json()['data']['topic']['post']['content']
+        return content
+    return None
+
+
+def extract_python_code(content):
+    """
+    Extract Python code from the solution content.
+    """
+    python_code_match = re.search(r'```Python3\s*\[\]\s*([\s\S]*?)\s*```', content)
+    if python_code_match:
+        return python_code_match.group(1).strip()
+    return None
+
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Usage: python script.py <csrf_token> <leetcode_session> <title_slug>")
@@ -63,6 +159,13 @@ if __name__ == "__main__":
         content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
 
         print(content)
+        
+        solution_id = fetch_python_solution_id(csrf_token, leetcode_session, title_slug)
+        print(f"Python solution ID: {solution_id}")
+        
+        solution_content = fetch_solution_content(csrf_token, leetcode_session, solution_id)
+        python_code = extract_python_code(solution_content)
+        print(python_code)
 
 # Usage :
 # python3 scrapping.py your_csrf_token your_leetcode_session_token title_slug_of_the_problem

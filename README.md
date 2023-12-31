@@ -163,10 +163,13 @@ Je vais sur le premier exo "Two Sum" et je vois qu'une requête a en réponse :
             "dataSchemas": []
         }
     }
-}```
+}
+```
 
 C'est exactement ce que je veux !
-J'ai donc analysé la requête et ces en-têtes, et ai pu créé une requête fonctionnelle :
+J'ai donc analysé la requête et ces en-têtes, et ai pu créé une requête fonctionnelle, check scrapping.py
+
+Maintenant je veux également une réponse par exercice !
 
 
 
