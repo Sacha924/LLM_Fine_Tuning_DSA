@@ -190,6 +190,7 @@ Cost of the first finetuning on 50 exercises :
 
   <img src="img/6.JPG"/>
 
-
+Results: after a few queries I realized that the results were not satisfactory, and after some thought I decided that rather than re-finetuning this model, I would try using gpt-3.5-turbo-1106.
 tool to automatically test the solutions 
+
 https://github.com/skygragon/leetcode-cli?tab=readme-ov-file
