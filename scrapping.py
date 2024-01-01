@@ -141,10 +141,21 @@ def extract_python_code(content):
     """
     Extract Python code from the solution content.
     """
-    python_code_match = re.search(r'```Python3\s*\[\]\s*([\s\S]*?)\s*```', content)
-    if python_code_match:
-        return python_code_match.group(1).strip()
-    return None
+    # Look for the start of the Python class definition
+    start_idx = content.find("class Solution:")
+    if start_idx == -1:
+        return None  # If the start isn't found, return None
+
+    # Find the end of the code block, marked by triple backticks
+    end_idx = content.find("```", start_idx)
+    if end_idx != -1:
+        # Extract the code block, excluding the closing backticks
+        code_block = content[start_idx:end_idx]
+    else:
+        # If closing backticks are not found, extract everything from the start
+        code_block = content[start_idx:]
+
+    return code_block.strip()
 
 
 import requests
@@ -212,17 +223,19 @@ if __name__ == "__main__":
         csrf_token = sys.argv[1]
         leetcode_session = sys.argv[2]
         
-        title_slugs = fetch_hard_problems_title_slugs(csrf_token, leetcode_session, 50, 430)
+        title_slugs = fetch_hard_problems_title_slugs(csrf_token, leetcode_session, 5, 430)
         
         with open("data.jsonl", 'w') as file:
             for title_slug in title_slugs:
                 question_content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
                 
                 solution_id = fetch_python_solution_id(csrf_token, leetcode_session, title_slug)
-                
+                print("solution id", solution_id)
                 solution_content = fetch_solution_content(csrf_token, leetcode_session, solution_id)
+                
                 python_code = extract_python_code(solution_content)
                 
+                print("pythoncode", python_code)
                 fine_tune_data = {
                     "prompt": "Write an optimized Python function to solve the following problem: " + question_content,
                     "completion": python_code
