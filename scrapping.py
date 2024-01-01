@@ -147,15 +147,73 @@ def extract_python_code(content):
     return None
 
 
+import requests
+
+def fetch_hard_problems_title_slugs(csrf_token, leetcode_session, limit=5, skip=400):
+    """
+    Fetches the titleSlugs of free hard problems from LeetCode.
+
+    Args:
+    csrf_token (str): CSRF token for authentication.
+    leetcode_session (str): LeetCode session token for authentication.
+    limit (int): Number of problems to fetch in one request.
+    skip (int): Number of problems to skip.
+
+    Returns:
+    list: A list of titleSlugs for free hard problems.
+    """
+
+    url = "https://leetcode.com/graphql/"
+    query = """
+    query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+        problemsetQuestionList: questionList(categorySlug: $categorySlug, limit: $limit, skip: $skip, filters: $filters) {
+            total: totalNum
+            questions: data {
+                titleSlug
+                isPaidOnly
+                difficulty
+            }
+        }
+    }
+    """
+    
+    variables = {
+        "categorySlug": "",
+        "skip": skip,
+        "limit": limit,
+        "filters": {
+            "difficulty": "HARD"
+        }
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Cookie": f"csrftoken={csrf_token}; LEETCODE_SESSION={leetcode_session}"
+    }
+
+    response = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        problems = data['data']['problemsetQuestionList']['questions']
+        return [problem['titleSlug'] for problem in problems if not problem['isPaidOnly'] and problem['difficulty'] == 'Hard']
+    else:
+        raise Exception(f"Failed to fetch data: {response.status_code}")
+
+
+
+
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print("Usage: python script.py <csrf_token> <leetcode_session> <title_slug>")
     else:
         csrf_token = sys.argv[1]
         leetcode_session = sys.argv[2]
-        title_slugs = sys.argv[3].split(",")
-
+        
+        title_slugs = fetch_hard_problems_title_slugs(csrf_token, leetcode_session, 50, 430)
+        
         with open("data.jsonl", 'w') as file:
             for title_slug in title_slugs:
                 question_content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
@@ -166,11 +224,11 @@ if __name__ == "__main__":
                 python_code = extract_python_code(solution_content)
                 
                 fine_tune_data = {
-                    "prompt": question_content,
+                    "prompt": "Write an optimized Python function to solve the following problem: " + question_content,
                     "completion": python_code
                 }
                 
                 file.write(json.dumps(fine_tune_data) + '\n')
 
 # Usage :
-# python3 scrapping.py your_csrf_token your_leetcode_session_token title_slug_of_the_problem
+# python3 scrapping.py your_csrf_token your_leetcode_session_token 
