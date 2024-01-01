@@ -177,33 +177,18 @@ Looking at the various queries, I found that :
 
   <img src="img/5.JPG"/>
 
-I can therefore retrieve a list of exercises from solutions and filter them by taking the first solution (the list of solutions contains tags and I can therefore take the first solution with the python3 tag).
+I can therefore retrieve a list of solutions and filter them by taking the first solution (the list of solutions contains tags and I can therefore take the first solution with the python3 tag).
 
 Now that I've got the exercise content and its solution, I just need to do a little formatting to get our jsonl file for the training data.
 
+Then i also create a function to automatically take the title_slug of some free hard problems. Job is done.
 
 
+Now it's time to finetune the data, check davinci_finetune.ipynb.
 
-Then to upload the data :
-https://platform.openai.com/docs/api-reference/files/create
+Cost of the first finetuning on 50 exercises : 
 
-curl https://api.openai.com/v1/files \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -F purpose="fine-tune" \
-  -F file="@mydata.jsonl"
-
-Then start the finetune :
-https://platform.openai.com/docs/api-reference/fine-tuning
-
-
-curl https://api.openai.com/v1/fine_tuning/jobs \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -d '{
-    "training_file": "MY FILE ID FROM PREVIOUS REQUEST",
-    "model": "davinci-002"
-  }'
-
+  <img src="img/6.JPG"/>
 
 
 tool to automatically test the solutions 
