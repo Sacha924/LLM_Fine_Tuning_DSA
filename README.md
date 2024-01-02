@@ -230,3 +230,7 @@ Unlike davinci-002, the data must be formatted as follows for my case:
 ```
 This format is crucial for the model to understand each pair as a separate conversation or interaction
 So I'm going to modify my scrapping.py file to get the right results
+
+After some modification I got the dataGPT.jsonl, so I can send the data file and start to finetune gpt-3.5-turbo-1106.
+
+The tests are disappointing, the generated code doesn't solve a random medium problem, and there are syntax errors in the proposed code...
