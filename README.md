@@ -1,27 +1,37 @@
 # LLM Fine Tuning
 
+![Status](https://img.shields.io/badge/status-in_progress-yellow)
+![Language](https://img.shields.io/badge/language-Python-blue)
+![Issues](https://img.shields.io/github/issues/Sacha924/LLM_Fine_Tuning_DSA)
+![Forks](https://img.shields.io/github/forks/Sacha924/LLM_Fine_Tuning_DSA)
+![Stars](https://img.shields.io/github/stars/Sacha924/LLM_Fine_Tuning_DSA)
+## Table of Contents
+- [Context](#context)
+- [Attempted Solution](#attempted-solution)
+- [The Idea](#the-idea)
+- [Project Goal](#project-goal)
+- [My Work / Research](#my-work--research)
+- [Let's Code](#lets-code)
+- [Finetuning GPT3.5](#finetuning-gpt35)
+
 ## Context
-chatGPT is good at solving D&A-type problems, but not the hard ones.
+chatGPT is adept at solving D&A-type problems, but struggles with the more challenging ones. For example, the latest hard problem from LeetCode:
 
-If we take the latest problems that come out, for example, the latest hard problem released on LeetCode as I write these lines:
-
-<img src ="img/1.JPG" alt="Problem Statement"/>
+![Problem Statement](img/1.JPG)
 
 ## Attempted Solution
-When asked to solve it, the answer given is wrong. Below are the images of the attempted solution:
+When asked to solve it, the response was incorrect. Here are the images of the attempted solutions:
 
 <div style="display:flex; justify-content:space-between;">
   <img src="img/2.JPG" alt="Solution Attempt 1" style="width: 45%; margin-right: 10px;"/>
   <img src="img/3.JPG" alt="Solution Attempt 2" style="width: 45%;"/>
 </div>
 
-<br/>
-
 ## The Idea
-The goal is to design a more efficient model for code questions.
+The goal is to design a more efficient model for Data Structure and Algorithm (DSA) questions.
 
 ## Project Goal
-My aim is to create a browser extension, in which you can copy and paste a DSA (Data Structure and Algorithm) type question, and the extension will provide the answer to the question.
+I aim to create a browser extension that provides answers to DSA questions when pasted into it.
 
 ---
 
@@ -83,8 +93,9 @@ the cost of then testing the model with a few exercises will be lower: if I do f
 
 The main cost is in training.
 
+NB : after testing, the cost is higher than that because the leetcode problem statement for hard/medium problem are really much longer on average than the easy problems.
 
-## Davinci-002 or GPT-3.5-turbo
+### Davinci-002 or GPT-3.5-turbo
 
 > Davinci-002 tends to be better at understanding and generating responses for complex tasks. It has been trained on a wider variety of data and for longer, allowing it to develop a deeper understanding of nuanced prompts.
 
@@ -100,12 +111,13 @@ Code-Related Tasks:
 I will go for Davinci-002.
 
 We can see on the OpenAPI doc : "You can also fine-tune a fine-tuned model which is useful if you acquire additional data and don't want to repeat the previous training steps."
-I'm gonna fine-tune my model two time, firstly on a small dataset, to see if my expectation of the cost is correct.
+If I want to I can fine-tune my model two time, firstly on a small dataset, to see if my expectation of the cost is correct.
 
 
-## Advice to get better result 
+### Advice to get better result 
 
-> I should test my prompt maybe directly on chatGPT, and see which one is the best for solving DSA question.I will when use the prompt for both asking questions and fine tuning the model.
+> I recommend testing prompts directly on chatGPT to identify the best ones for solving DSA questions. These prompts can then be used for both asking questions and fine-tuning the model.
+
 
 
 ## Let's code
@@ -131,7 +143,7 @@ Let's get the data. As I've decided that the model can already solve almost any 
 
 Steps to follow in my opinion:
 1. Create another leetcode account (hoping I won't get an IP ban and lose my leetcode streak 🙏)
-2. emulate the leetcode site with Puppeteer, go to the right exercise (list of exercise ids I've predefined by hand)
+2. Emulate the leetcode site with Puppeteer, go to the right exercise (list of exercise ids I've predefined by hand)
 3. Go to the solution tab, click on python, and take the first solution
 4. Go to the code location and retrieve it
 
@@ -140,9 +152,9 @@ Let's test it out.
 UPDATE: actually I found a github link from someone who lists leetcode's graphQL schema while searching on forums and stackoverflow post! Not easy to point out, because Leetcode disabled its introspection feature which will let everybody know all the schem (because It's not safe for a company to expose its graphql schema in production)
 
 I tested several queries, including :
-
+```bash
 curl 'https://leetcode.com/graphql'   -H 'Content-Type: application/json' --header 'Referer: https://leetcode.com' --header 'Cookie: LEETCODE_SESSION=your_leetcode_session; csrftoken=your_csrf_token' \  --data-raw '{"query":"query communitySolutions($questionSlug: String!, $skip: Int!, $first: Int!, $query: String, $orderBy: TopicSortingOption, $languageTags: [String!], $topicTags: [String!]) { questionSolutions( filters: {questionSlug: $questionSlug, skip: $skip, first: $first, query: $query, orderBy: $orderBy, languageTags: $languageTags, topicTags: $topicTags} ) { hasDirectResults totalNum solutions { id title commentCount topLevelCommentCount viewCount pinned isFavorite solutionTags { name slug } post { id status voteCount creationDate isHidden author { username isActive nameColor activeBadge { displayName icon } profile { userAvatar reputation } } searchMeta { content contentType commentAuthor { username } replyAuthor { username } highlights } } } }","variables":{"questionSlug":"two-sum","skip":0,"first":1,"orderBy":"hot","languageTags":["python3"],"topicTags":[]}}'
-
+```
 where you have to replace your_leetcode_session and your_csrf_token by the values you find in the cookies when you launch a leetcode session. Unfortunately I can't get a good result, I'm stuck with :
 
 ``` html
@@ -195,7 +207,7 @@ Results: after a few queries I realized that the results were not satisfactory, 
 
 ## Finetuning GPT3.5
 
-I have just over $4 in credit left.
+I have just over 4$ in credit left.
 Knowing that the first finetuning cost me 0.71$ for 49 exercises with a hit of 0.006 for 1000 tokens, knowing that with gpt-3.5-turbo the cost for 1000 tokens is 0.0080 this will cost me :
 0.71/0.006 * 0.008 or about $0.95. I can therefore afford to multiply the number of training data by 3. 
 
