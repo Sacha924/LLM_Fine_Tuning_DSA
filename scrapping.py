@@ -234,7 +234,7 @@ if __name__ == "__main__":
                 if python_code:
                     fine_tune_data = {
                         "messages": [
-                            {"role": "user", "content": question_content},
+                            {"role": "user", "content": "Write an optimized Python function to solve the following problem: " + question_content},
                             {"role": "assistant", "content": python_code}
                         ]
                     }
