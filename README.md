@@ -191,6 +191,42 @@ Cost of the first finetuning on 50 exercises :
   <img src="img/6.JPG"/>
 
 Results: after a few queries I realized that the results were not satisfactory, and after some thought I decided that rather than re-finetuning this model, I would try using gpt-3.5-turbo-1106.
-tool to automatically test the solutions 
 
-https://github.com/skygragon/leetcode-cli?tab=readme-ov-file
+
+## Finetuning GPT3.5
+
+I have just over $4 in credit left.
+Knowing that the first finetuning cost me 0.71$ for 49 exercises with a hit of 0.006 for 1000 tokens, knowing that with gpt-3.5-turbo the cost for 1000 tokens is 0.0080 this will cost me :
+0.71/0.006 * 0.008 or about $0.95. I can therefore afford to multiply the number of training data by 3. 
+
+
+Unlike davinci-002, the data must be formatted as follows for my case:
+
+```json 
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Write an optimized Python function to solve the following problem: [Problem Statement]"
+    },
+    {
+      "role": "assistant",
+      "content": "[Python Solution]"
+    }
+  ]
+}
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Write an optimized Python function to solve the following problem: [Problem Statement]"
+    },
+    {
+      "role": "assistant",
+      "content": "[Python Solution]"
+    }
+  ]
+}
+```
+This format is crucial for the model to understand each pair as a separate conversation or interaction
+So I'm going to modify my scrapping.py file to get the right results

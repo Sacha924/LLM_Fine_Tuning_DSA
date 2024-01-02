@@ -158,9 +158,8 @@ def extract_python_code(content):
     return code_block.strip()
 
 
-import requests
 
-def fetch_hard_problems_title_slugs(csrf_token, leetcode_session, limit=5, skip=400):
+def fetch_problems_title_slugs(csrf_token, leetcode_session, difficulty, limit=5, skip=400):
     """
     Fetches the titleSlugs of free hard problems from LeetCode.
 
@@ -193,7 +192,7 @@ def fetch_hard_problems_title_slugs(csrf_token, leetcode_session, limit=5, skip=
         "skip": skip,
         "limit": limit,
         "filters": {
-            "difficulty": "HARD"
+            "difficulty": difficulty
         }
     }
 
@@ -207,15 +206,11 @@ def fetch_hard_problems_title_slugs(csrf_token, leetcode_session, limit=5, skip=
     if response.status_code == 200:
         data = response.json()
         problems = data['data']['problemsetQuestionList']['questions']
-        return [problem['titleSlug'] for problem in problems if not problem['isPaidOnly'] and problem['difficulty'] == 'Hard']
+        return [problem['titleSlug'] for problem in problems if not problem['isPaidOnly']]
     else:
         raise Exception(f"Failed to fetch data: {response.status_code}")
 
-
-
-
-
-
+# -------------- DATA FOR gpt-3.5-turbo-1106 --------------
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python script.py <csrf_token> <leetcode_session> <title_slug>")
@@ -223,9 +218,12 @@ if __name__ == "__main__":
         csrf_token = sys.argv[1]
         leetcode_session = sys.argv[2]
         
-        title_slugs = fetch_hard_problems_title_slugs(csrf_token, leetcode_session, 70, 430)
+        title_slugs_hard = fetch_problems_title_slugs(csrf_token, leetcode_session, "HARD",120, 430)
+        title_slugs_medium = fetch_problems_title_slugs(csrf_token, leetcode_session, "MEDIUM", 110, 1100)
+
+        title_slugs = title_slugs_hard + title_slugs_medium
         
-        with open("data.jsonl", 'w') as file:
+        with open("Data/dataGPT.jsonl", 'w') as file:
             for title_slug in title_slugs:
                 question_content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
                 
@@ -235,11 +233,40 @@ if __name__ == "__main__":
                 
                 if python_code:
                     fine_tune_data = {
-                        "prompt": "Write an optimized Python function to solve the following problem: " + question_content,
-                        "completion": python_code
+                        "messages": [
+                            {"role": "user", "content": question_content},
+                            {"role": "assistant", "content": python_code}
+                        ]
                     }
                     
                     file.write(json.dumps(fine_tune_data) + '\n')
+
+
+# -------------- DATA FOR DAVINCI-002 --------------
+# if __name__ == "__main__":
+#     if len(sys.argv) != 3:
+#         print("Usage: python script.py <csrf_token> <leetcode_session> <title_slug>")
+#     else:
+#         csrf_token = sys.argv[1]
+#         leetcode_session = sys.argv[2]
+        
+#         title_slugs = fetch_hard_problems_title_slugs(csrf_token, leetcode_session, 70, 430)
+        
+#         with open("Data/data.jsonl", 'w') as file:
+#             for title_slug in title_slugs:
+#                 question_content = clean_leetcode_content(fetch_leetcode_question_content(csrf_token, leetcode_session, title_slug))
+                
+#                 solution_id = fetch_python_solution_id(csrf_token, leetcode_session, title_slug)
+#                 solution_content = fetch_solution_content(csrf_token, leetcode_session, solution_id)
+#                 python_code = extract_python_code(solution_content)
+                
+#                 if python_code:
+#                     fine_tune_data = {
+#                         "prompt": "Write an optimized Python function to solve the following problem: " + question_content,
+#                         "completion": python_code
+#                     }
+                    
+#                     file.write(json.dumps(fine_tune_data) + '\n')
 
 # Usage :
 # python3 scrapping.py your_csrf_token your_leetcode_session_token 
