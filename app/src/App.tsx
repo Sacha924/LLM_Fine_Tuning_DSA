@@ -32,23 +32,30 @@ function App() {
 
   return (
     <div className="App">
-      <h1>React WebSocket Example</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type='text'
-          value={message}
-          onChange={e => setMessage(e.target.value)} />
-        <button type="submit">Send</button>
-      </form>
+      <h1>Coding Chat</h1>
+      <p> Ask Your Coding DSA question and get your answer</p>
       <div className="messages">
         {messages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender}`}>
             <span className="sender">{msg.sender.toUpperCase()}: </span>
-            {msg.content}
+            {msg.sender === 'ai'
+              ? <pre>{msg.content}</pre>
+              : msg.content
+            }
           </div>
         ))}
       </div>
+      <div className="chat-input-container">
+        <form onSubmit={handleSubmit}>
+          <input
+            type='text'
+            value={message}
+            onChange={e => setMessage(e.target.value)} />
+          <button type="submit">Send</button>
+        </form>
+      </div>
     </div>
+
   );
 }
 

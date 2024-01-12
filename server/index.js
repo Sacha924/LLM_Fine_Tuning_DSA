@@ -2,18 +2,23 @@
 const WebSocket = require('ws');
 const http = require('http');
 const axios = require('axios');
+require("dotenv").config()
+const {API_KEY} = process.env
+const OpenAI = require("openai")
+const openai = new OpenAI({ apiKey: API_KEY });
+
 
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('WebSocket server is running');
 });
 
-const openAIRequest = async (message) => {
+const openAIRequestMYModel = async (message) => {
     try {
         const api_url = "https://api.openai.com/v1/completions";
         const headers = {
             "Content-Type": "application/json",
-            "Authorization": `Bearer OPEN API KEY`
+            "Authorization": `Bearer ${API_KEY}`
         };
 
         // Ensure message is a string
@@ -33,6 +38,17 @@ const openAIRequest = async (message) => {
     }
 };
 
+const openAIRequestGPT4 = async (message) => {
+    const completion = await openai.chat.completions.create({
+        messages: [
+            { "role": "user", "content": `Write an optimized Python function to solve the following problem: ${message}` },],
+        model: "gpt-4-1106-preview",
+        "max_tokens": 300
+    });
+    console.log(completion.choices[0])
+    console.log(completion.choices[0].message.content);
+    return completion.choices[0].message.content
+}
 
 const wss = new WebSocket.Server({ server });
 
@@ -42,7 +58,7 @@ wss.on('connection', (ws) => {
 
     ws.on('message', async(message) => {
         console.log(`Received message from client: ${message}`);
-        const response = await openAIRequest(message);
+        const response = await openAIRequestGPT4(message);
         console.log("here" + response)
         ws.send(response);
     });
