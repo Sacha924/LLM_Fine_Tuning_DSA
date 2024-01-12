@@ -1,0 +1,26 @@
+.messages {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .message {
+    margin: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    max-width: 70%;
+  }
+  
+  .message.user {
+    align-self: flex-start;
+    background-color: #f0f0f0;
+  }
+  
+  .message.ai {
+    align-self: flex-end;
+    background-color: #d0f0d0;
+  }
+  
+  .sender {
+    font-weight: bold;
+  }
+  

@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import './App.css'; // Ensure you have this CSS file
 
 function App() {
-  // Use a ref for the websocket instance to persist across renders
   const ws = React.useRef<WebSocket | null>(null);
-  const [messages, setMessages] = useState<String[]>([]);
+  const [messages, setMessages] = useState<{ sender: string, content: string }[]>([]);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // Initialize websocket connection once when the component is mounted
     ws.current = new WebSocket('ws://localhost:8080');
 
-    ws.current.onmessage = async(event) => {
+    ws.current.onmessage = async (event) => {
       const newMessage = typeof event.data === 'string' ? event.data : await event.data.text();
-      setMessages(prevMessages => [...prevMessages, newMessage]);
+      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: newMessage }]);
     };
 
-    // Clean up the websocket connection when the component is unmounted
     return () => {
       if (ws.current) {
         ws.current.close();
@@ -26,6 +24,7 @@ function App() {
   const handleSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     if (message !== "") {
+      setMessages(prevMessages => [...prevMessages, { sender: 'user', content: message }]);
       ws.current?.send(message);
       setMessage("");
     }
@@ -37,13 +36,16 @@ function App() {
       <form onSubmit={handleSubmit}>
         <input
           type='text'
-          value={message.toString()}
+          value={message}
           onChange={e => setMessage(e.target.value)} />
         <button type="submit">Send</button>
       </form>
-      <div>
+      <div className="messages">
         {messages.map((msg, index) => (
-          <div key={index}>{msg}</div>
+          <div key={index} className={`message ${msg.sender}`}>
+            <span className="sender">{msg.sender.toUpperCase()}: </span>
+            {msg.content}
+          </div>
         ))}
       </div>
     </div>
