@@ -13,6 +13,8 @@
 - [My Work / Research](#my-work--research)
 - [Let's Code](#lets-code)
 - [Finetuning GPT3.5](#finetuning-gpt35)
+- [The App](#the-app)
+
 
 ## Context
 chatGPT is adept at solving D&A-type problems, but struggles with the more challenging ones. For example, the latest hard problem from LeetCode:
@@ -246,3 +248,43 @@ So I'm going to modify my scrapping.py file to get the right results
 After some modification I got the dataGPT.jsonl, so I can send the data file and start to finetune gpt-3.5-turbo-1106.
 
 The tests are disappointing, the generated code doesn't solve a random medium problem, and there are syntax errors in the proposed code...
+
+
+## The App
+
+The application has a few peculiarities:
+
+- I chose to use either my finetuned model or gpt4 (on the backend), and then I decided that the application would use gpt4 as the model so that the results would be more satisfactory.
+
+- I made the choice to have a stateless chat application : each request is processed independently without any knowledge of previous requests. I made this choice because it cost less tokens to do so, and I imagine a case when i want the user to only get the response of the chat, and not continue the conversation any further.
+
+**To use the application :**
+
+- go on the /server folder, create a .env file where you add your OpenAI API Key (you should have one with credits on it), then do npm install, and then node index.js to launch the server
+- go on the /app folder and do npm install
+- you can reach the application and test it !
+
+Here are some images of what it looks like :
+
+<img src="img/7.JPG"/>
+
+<img src="img/8.JPG"/>
+
+Development choices and ideas for the future:
+
+I use a websocket because it allows for real-time communication between the server and the client. This is essential for a chat application where immediate response and interactivity are key. The websocket ensures that as soon as the server receives a response from the OpenAI API, it is immediately pushed to the client, providing a seamless chat experience.
+
+**Development Choices:**
+- **Websocket for Real-Time Communication**: Chosen for its ability to provide a responsive and interactive user experience.
+- **React for Frontend**: React's efficient update and rendering system is ideal for the dynamic nature of chat applications.
+- **Node.js for Backend**: Node.js is well-suited for handling asynchronous requests and I/O operations, crucial for handling API calls and websocket communication.
+- **Stateless Chat Design**: Opted for simplicity and cost-effectiveness in API usage.
+
+**Ideas for the Future:**
+- **Stateful Conversations**: Implementing a stateful chat system could provide a more coherent and context-aware conversation experience. This could be an option for users who prefer a continuous chat history.
+- **User Authentication**: Implementing user accounts and authentication to personalize the chat experience.
+- **Enhanced UI/UX**: Further improvements to the user interface and user experience, such as adding more interactive elements, customization options, or mobile responsiveness.
+- **Integration of Additional APIs**: Exploring the integration of other APIs for enhanced functionalities like language translation, image processing, or data analysis.
+
+**How to Contribute:**
+- Contributions to the project are welcome! Feel free to fork the repository, make changes, and submit a pull request.
