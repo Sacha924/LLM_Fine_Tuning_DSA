@@ -1,6 +1,6 @@
 # LLM Fine Tuning
 
-![Status](https://img.shields.io/badge/status-in_progress-yellow)
+![Status](https://img.shields.io/badge/status-done-greeb)
 ![Language](https://img.shields.io/badge/language-Python-blue)
 ![Issues](https://img.shields.io/github/issues/Sacha924/LLM_Fine_Tuning_DSA)
 ![Forks](https://img.shields.io/github/forks/Sacha924/LLM_Fine_Tuning_DSA)
